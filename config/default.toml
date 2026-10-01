@@ -1,0 +1,64 @@
+# liaotao - Default Configuration
+# Template version: 1.0.0
+#
+# Layer priority (highest wins):
+#   default (this file) → user (~/.config/<app>/user.toml) → project (./config/project.toml) → runtime (env/flags)
+#
+# Do NOT commit user.toml to version control.
+
+# ---------------------------------------------------------------------------
+[app]
+name       = "liaotao"
+version    = "0.1.0"
+mode       = "debug"   # debug | normal
+language   = "en"
+
+# ---------------------------------------------------------------------------
+[config]
+schema_version      = 1
+enable_layered_merge = true
+# strict_mode = true will make startup fail on any unknown config key.
+strict_mode         = false
+
+# ---------------------------------------------------------------------------
+[path_manager]
+# Restrict ALL write operations to these root directories.
+# Any path outside these roots will be rejected at runtime.
+# Use environment variables like $HOME, $APPDATA, etc.
+allowed_roots = [
+  "$HOME/Downloads",
+  "$HOME/Documents",
+]
+
+# Runtime directories — created automatically on first run.
+# Use relative paths or environment variables.
+temp_dir    = "$HOME/.local/share/liaotao/.tmp"
+logs_dir    = "$HOME/.local/share/liaotao/logs"
+reports_dir = "$HOME/.local/share/liaotao/reports"
+
+# Collision strategy when output file already exists.
+# Options: increment | suffix | short_hash
+collision_strategy = "increment"
+
+normalize_unicode = false
+trim_whitespace   = true
+
+# ---------------------------------------------------------------------------
+[logger]
+level         = "info"  # trace | debug | info | warn | error
+console_pretty = true
+file_json      = true
+
+rotation_enabled = true
+max_file_mb      = 20
+max_files        = 5
+
+# Attach job_id and correlation_id to every log event.
+include_context_ids = true
+
+# ---------------------------------------------------------------------------
+[reporting]
+enabled           = false
+json_report       = false
+csv_report        = false
+include_failed    = false

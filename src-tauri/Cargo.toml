@@ -1,0 +1,59 @@
+[package]
+name    = "liaotao"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "liaotao_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "liaotao"
+path = "src/main.rs"
+
+[dependencies]
+# Tauri
+tauri         = { version = "2", features = [] }
+tauri-build   = { version = "2", build-dependencies = true }
+
+# Config: load + merge TOML layers
+config        = "0.14"
+serde         = { version = "1", features = ["derive"] }
+toml          = "0.8"
+
+# Database
+sqlx          = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid", "json"] }
+tokio         = { version = "1", features = ["full"] }
+chrono        = { version = "0.4", features = ["serde"] }
+uuid          = { version = "1", features = ["v4", "serde"] }
+
+# HTTP Client for LLM APIs
+reqwest       = { version = "0.12", features = ["json", "stream", "rustls-tls"] }
+
+# Logging
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender   = "0.2"
+
+# Error handling
+thiserror     = "1"
+anyhow        = "1"
+
+# Async traits
+async-trait   = "0.1"
+
+# Paths and filesystem
+dirs          = "5"
+shellexpand   = "3"
+
+# Serialization
+serde_json    = "1"
+
+[dev-dependencies]
+tempfile      = "3"
+
+[profile.release]
+opt-level  = 3
+lto        = true
+strip      = true
+panic      = "abort"

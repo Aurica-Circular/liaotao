@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-liaotao-border;
+  }
+
+  body {
+    @apply bg-liaotao-bg-primary text-liaotao-text-primary font-sans antialiased;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-liaotao-bg-primary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-liaotao-bg-tertiary rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-liaotao-text-muted;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-liaotao-accent/30 text-liaotao-text-primary;
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    @apply outline-none ring-2 ring-liaotao-accent ring-offset-2 ring-offset-liaotao-bg-primary;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-liaotao-accent focus-visible:ring-offset-2 focus-visible:ring-offset-liaotao-bg-primary disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-liaotao-accent text-liaotao-bg-primary hover:bg-liaotao-accent-hover active:bg-liaotao-accent-active;
+  }
+
+  .btn-secondary {
+    @apply btn bg-liaotao-bg-tertiary text-liaotao-text-primary hover:bg-liaotao-text-muted/20 active:bg-liaotao-text-muted/30;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-liaotao-text-secondary hover:bg-liaotao-bg-tertiary hover:text-liaotao-text-primary active:bg-liaotao-text-muted/20;
+  }
+
+  .btn-danger {
+    @apply btn bg-liaotao-error/10 text-liaotao-error hover:bg-liaotao-error/20 active:bg-liaotao-error/30;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 text-sm bg-liaotao-bg-tertiary border border-liaotao-border text-liaotao-text-primary placeholder-liaotao-text-muted rounded-lg transition-colors focus:border-liaotao-accent focus:ring-1 focus:ring-liaotao-accent;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-2 w-full px-3 py-2 text-sm text-liaotao-text-secondary hover:bg-liaotao-bg-tertiary hover:text-liaotao-text-primary rounded-lg transition-colors;
+  }
+
+  .sidebar-item-active {
+    @apply bg-liaotao-bg-tertiary text-liaotao-text-primary;
+  }
+
+  .message-bubble {
+    @apply max-w-[85%] px-4 py-2.5 rounded-2xl;
+  }
+
+  .message-user {
+    @apply message-bubble bg-liaotao-accent/10 text-liaotao-text-primary ml-auto rounded-tr-sm;
+  }
+
+  .message-assistant {
+    @apply message-bubble bg-liaotao-bg-tertiary text-liaotao-text-primary mr-auto rounded-tl-sm;
+  }
+
+  .code-block {
+    @apply bg-liaotao-bg-primary border border-liaotao-border rounded-lg p-3 overflow-x-auto text-sm font-mono;
+  }
+
+  .inline-code {
+    @apply bg-liaotao-bg-primary border border-liaotao-border rounded px-1.5 py-0.5 text-sm font-mono;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
