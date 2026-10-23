@@ -1,10 +1,11 @@
-// ChatScreen.tsx — Minimal screen to see an answer stream in; grows into the chat (task 1.6)
+// ChatScreen.tsx — The conversation: bubbles, streamed answer, send and stop
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Engine, getDefaultEngine, listModels } from '../../lib/engine'
+import { ChatMessage, Engine, getDefaultEngine, listModels } from '../../lib/engine'
 import { useChatStream } from '../../hooks/useChatStream'
 import logo from '../../../Liaotao-logo.svg'
+import MessageBubble from './MessageBubble'
 
 export default function ChatScreen() {
   const { t } = useTranslation()
@@ -13,7 +14,22 @@ export default function ChatScreen() {
   const [model, setModel] = useState('')
   const [engineError, setEngineError] = useState<string | null>(null)
   const [prompt, setPrompt] = useState('')
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const endRef = useRef<HTMLDivElement>(null)
   const stream = useChatStream()
+
+  // Keep each finished answer in the conversation, once. Layout effect: the
+  // answer moves into the list before paint, so its bubble never blinks.
+  useLayoutEffect(() => {
+    if ((stream.status === 'done' || stream.status === 'stopped') && stream.text !== '') {
+      setMessages((m) => [...m, { role: 'assistant', content: stream.text }])
+    }
+  }, [stream.status])
+
+  // Follow the conversation as messages are added and the answer grows
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [messages.length, stream.text])
 
   useEffect(() => {
     getDefaultEngine()
@@ -29,7 +45,10 @@ export default function ChatScreen() {
 
   const send = () => {
     if (!engine || !model || !prompt.trim() || stream.busy) return
-    void stream.send({ engine, model, messages: [{ role: 'user', content: prompt }] })
+    const next: ChatMessage[] = [...messages, { role: 'user', content: prompt }]
+    setMessages(next)
+    setPrompt('')
+    void stream.send({ engine, model, messages: next })
   }
 
   return (
@@ -53,18 +72,29 @@ export default function ChatScreen() {
         <p className="text-liaotao-error">{t('chat.engineError', { message: engineError })}</p>
       )}
 
-      <section className="flex-1 overflow-auto whitespace-pre-wrap rounded border bg-liaotao-bg-secondary p-4">
-        {stream.text}
-        {(stream.status === 'waiting' || stream.status === 'thinking') && (
-          <span className="flex items-center gap-2 text-liaotao-text-secondary">
-            <span className="flex gap-1">
-              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:150ms]" />
-              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:300ms]" />
-            </span>
-            {t(stream.status === 'thinking' ? 'chat.thinking' : 'chat.waiting')}
-          </span>
+      <section className="flex flex-1 flex-col gap-3 overflow-auto rounded border p-4">
+        {messages.map((m, i) => (
+          <MessageBubble
+            key={i}
+            role={m.role === 'user' ? 'user' : 'assistant'}
+            content={m.content}
+          />
+        ))}
+        {stream.busy && (
+          <MessageBubble role="assistant" content={stream.text}>
+            {(stream.status === 'waiting' || stream.status === 'thinking') && (
+              <span className="flex items-center gap-2 text-liaotao-text-secondary">
+                <span className="flex gap-1">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:150ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:300ms]" />
+                </span>
+                {t(stream.status === 'thinking' ? 'chat.thinking' : 'chat.waiting')}
+              </span>
+            )}
+          </MessageBubble>
         )}
+        <div ref={endRef} />
       </section>
 
       {stream.error && (
