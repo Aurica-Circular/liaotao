@@ -87,7 +87,8 @@ pub fn ensure_within_allowed(path: &Path, allowed_roots: &[PathBuf]) -> Result<(
         .unwrap_or_else(|_| path.to_path_buf());
 
     for root in allowed_roots {
-        let root_canonical = root.canonicalize().unwrap_or_else(|_| root.clone());
+        let root = expand_and_normalize(root);
+        let root_canonical = root.canonicalize().unwrap_or(root);
         if canonical.starts_with(&root_canonical) {
             return Ok(());
         }
@@ -106,8 +107,10 @@ pub fn ensure_within_allowed(path: &Path, allowed_roots: &[PathBuf]) -> Result<(
 fn expand_and_normalize(p: &Path) -> PathBuf {
     let path_str = p.to_string_lossy();
     let expanded = shellexpand::tilde(&path_str);
-    let expanded = shellexpand::env(&expanded).unwrap_or(expanded);
-    let expanded_path = PathBuf::from(expanded.as_ref());
+    let expanded = shellexpand::env(&expanded)
+        .map(|s| s.into_owned())
+        .unwrap_or_else(|_| expanded.into_owned());
+    let expanded_path = PathBuf::from(expanded);
 
     if expanded_path.is_absolute() {
         expanded_path

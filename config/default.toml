@@ -26,6 +26,7 @@ strict_mode         = false
 # Any path outside these roots will be rejected at runtime.
 # Use environment variables like $HOME, $APPDATA, etc.
 allowed_roots = [
+  "$HOME/.local/share/liaotao",
   "$HOME/Downloads",
   "$HOME/Documents",
 ]

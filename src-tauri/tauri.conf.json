@@ -1,4 +1,8 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Liaotao",
+  "version": "0.1.0",
+  "identifier": "fr.phil.liaotao",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -30,11 +34,5 @@
         "minHeight": 600
       }
     ]
-  },
-  "identifier": "fr.phil.liaotao",
-  "plugins": {
-    "sql": {
-      "preload": ["sqlite:liaotao.db"]
-    }
   }
 }

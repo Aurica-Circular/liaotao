@@ -5,16 +5,18 @@ edition = "2021"
 
 [lib]
 name = "liaotao_lib"
-crate-type = ["lib", "cdylib", "staticlib"]
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
 name = "liaotao"
 path = "src/main.rs"
 
+[build-dependencies]
+tauri-build   = { version = "2", features = [] }
+
 [dependencies]
 # Tauri
 tauri         = { version = "2", features = [] }
-tauri-build   = { version = "2", build-dependencies = true }
 
 # Config: load + merge TOML layers
 config        = "0.14"
