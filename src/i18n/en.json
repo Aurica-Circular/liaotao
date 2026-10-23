@@ -11,6 +11,34 @@
     "thinking": "The model is thinking…",
     "engineError": "Engine error: {{message}}",
     "doneIn": "Answered in {{seconds}} s",
-    "stoppedAfter": "Stopped after {{seconds}} s"
+    "stoppedAfter": "Stopped after {{seconds}} s",
+    "noEngine": "No engine yet. Open the settings to add one."
+  },
+  "settings": {
+    "title": "Settings",
+    "open": "Open settings",
+    "close": "Close settings",
+    "engines": "Engines",
+    "add": "Add engine",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete the engine {{name}}?",
+    "keySaved": "key saved",
+    "name": "Name",
+    "address": "Address",
+    "addressHint": "OpenAI-compatible address. Ollama: http://localhost:11434/v1 · AiTao: http://localhost:8200/v1",
+    "key": "API key",
+    "keyOptional": "Optional — only online services need one",
+    "keyKeep": "Saved — leave empty to keep it",
+    "keyRemove": "Remove the saved key",
+    "test": "Test",
+    "testOk": "Connected — {{count}} models",
+    "save": "Save",
+    "cancel": "Cancel",
+    "keys": "API keys",
+    "storageFile": "Settings file (default)",
+    "storageFileHelp": "Kept in Liaotao's settings file, outside synced folders, readable by your user account only.",
+    "storageKeychain": "System keychain",
+    "storageKeychainHelp": "Kept encrypted in the system keychain (Keychain on macOS). Saved keys move there."
   }
 }

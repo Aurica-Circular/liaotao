@@ -2,16 +2,23 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Settings } from 'lucide-react'
 import { ChatMessage, EngineView, listEngines, listModels } from '../../lib/engine'
 import { useChatStream } from '../../hooks/useChatStream'
 import logo from '../../../Liaotao-logo.svg'
 import MessageBubble from './MessageBubble'
 
-export default function ChatScreen() {
+interface ChatScreenProps {
+  onOpenSettings: () => void
+  settingsVersion: number
+}
+
+export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScreenProps) {
   const { t } = useTranslation()
   const [engine, setEngine] = useState<EngineView | null>(null)
   const [models, setModels] = useState<string[]>([])
   const [model, setModel] = useState('')
+  const [noEngine, setNoEngine] = useState(false)
   const [engineError, setEngineError] = useState<string | null>(null)
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -32,17 +39,25 @@ export default function ChatScreen() {
   }, [messages.length, stream.text])
 
   useEffect(() => {
+    setEngineError(null)
     listEngines()
       .then(async (engines) => {
         const e = engines[0]
-        if (!e) return
+        if (!e) {
+          setEngine(null)
+          setModels([])
+          setModel('')
+          setNoEngine(true)
+          return
+        }
+        setNoEngine(false)
         setEngine(e)
         const found = await listModels({ id: e.id, base_url: e.base_url })
         setModels(found)
         setModel(found[0] ?? '')
       })
       .catch((err) => setEngineError(String(err)))
-  }, [])
+  }, [settingsVersion])
 
   const send = () => {
     if (!engine || !model || !prompt.trim() || stream.busy) return
@@ -67,6 +82,13 @@ export default function ChatScreen() {
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
+        <button
+          className="rounded p-1 text-liaotao-text-secondary hover:text-liaotao-accent"
+          onClick={onOpenSettings}
+          aria-label={t('settings.open')}
+        >
+          <Settings className="h-5 w-5" />
+        </button>
       </header>
 
       {engineError && (
@@ -74,6 +96,9 @@ export default function ChatScreen() {
       )}
 
       <section className="flex flex-1 flex-col gap-3 overflow-auto rounded border p-4">
+        {noEngine && (
+          <p className="text-liaotao-text-secondary">{t('chat.noEngine')}</p>
+        )}
         {messages.map((m, i) => (
           <MessageBubble
             key={i}
