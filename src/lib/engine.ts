@@ -24,6 +24,7 @@ export interface ChatRequest {
 /** Exactly one `finished` or `failed` ends every generation. */
 export type StreamEvent =
   | { event: 'started' }
+  | { event: 'thinking'; text: string }
   | { event: 'delta'; text: string }
   | { event: 'finished'; durationMs: number; stopped: boolean; lastChunk: unknown }
   | { event: 'failed'; message: string }

@@ -120,10 +120,14 @@ pub async fn stream_chat(req: &ChatRequest, stop: &Notify, mut emit: impl FnMut(
             if let Some(err) = value.get("error") {
                 return emit(failed(err.to_string()));
             }
-            if let Some(text) = value["choices"][0]["delta"]["content"].as_str() {
-                if !text.is_empty() {
-                    emit(StreamEvent::Delta { text: text.to_string() });
-                }
+            let delta = &value["choices"][0]["delta"];
+            // Ollama names it "reasoning", other OpenAI-compatible engines "reasoning_content".
+            let thinking = delta["reasoning"].as_str().or(delta["reasoning_content"].as_str());
+            if let Some(text) = thinking.filter(|t| !t.is_empty()) {
+                emit(StreamEvent::Thinking { text: text.to_string() });
+            }
+            if let Some(text) = delta["content"].as_str().filter(|t| !t.is_empty()) {
+                emit(StreamEvent::Delta { text: text.to_string() });
             }
             last_chunk = Some(value);
         }

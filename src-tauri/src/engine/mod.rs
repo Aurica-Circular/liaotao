@@ -38,6 +38,8 @@ pub struct ChatRequest {
 pub enum StreamEvent {
     /// The engine accepted the request; text follows.
     Started,
+    /// A piece of the model's reasoning, sent before the answer by thinking models.
+    Thinking { text: String },
     /// A piece of the answer, to append.
     Delta { text: String },
     /// The answer is complete, or was stopped by the user.

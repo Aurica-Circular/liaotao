@@ -55,8 +55,15 @@ export default function ChatScreen() {
 
       <section className="flex-1 overflow-auto whitespace-pre-wrap rounded border bg-liaotao-bg-secondary p-4">
         {stream.text}
-        {stream.status === 'waiting' && (
-          <span className="text-liaotao-text-muted">{t('chat.waiting')}</span>
+        {(stream.status === 'waiting' || stream.status === 'thinking') && (
+          <span className="flex items-center gap-2 text-liaotao-text-secondary">
+            <span className="flex gap-1">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:150ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-liaotao-accent [animation-delay:300ms]" />
+            </span>
+            {t(stream.status === 'thinking' ? 'chat.thinking' : 'chat.waiting')}
+          </span>
         )}
       </section>
 

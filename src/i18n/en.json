@@ -7,7 +7,8 @@
     "placeholder": "Ask something… (Enter to send, Shift+Enter for a new line)",
     "send": "Send",
     "stop": "Stop",
-    "waiting": "Waiting for the engine…",
+    "waiting": "Waiting for the engine… (loading a model can take a while)",
+    "thinking": "The model is thinking…",
     "engineError": "Engine error: {{message}}",
     "doneIn": "Answered in {{seconds}} s",
     "stoppedAfter": "Stopped after {{seconds}} s"
