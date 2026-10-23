@@ -3,6 +3,7 @@
     "name": "Liaotao"
   },
   "chat": {
+    "engine": "Engine",
     "model": "Model",
     "placeholder": "Ask something… (Enter to send, Shift+Enter for a new line)",
     "send": "Send",

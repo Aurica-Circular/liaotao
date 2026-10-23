@@ -27,8 +27,11 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
     void reload()
   }, [])
 
+  // Confirmation stays inside the page: Tauri's macOS webview has no window.confirm
+  const [confirming, setConfirming] = useState<string | null>(null)
+
   const remove = (engine: EngineView) => {
-    if (!window.confirm(t('settings.confirmDelete', { name: engine.name }))) return
+    setConfirming(null)
     setError(null)
     deleteEngine(engine.id)
       .then(reload)
@@ -82,20 +85,40 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
                     </span>
                     <span className="truncate text-sm text-liaotao-text-secondary">{e.base_url}</span>
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      className="rounded border border-liaotao-border px-3 py-1 text-liaotao-accent"
-                      onClick={() => setEditing(e)}
-                    >
-                      {t('settings.edit')}
-                    </button>
-                    <button
-                      className="rounded border border-liaotao-border px-3 py-1 text-liaotao-error"
-                      onClick={() => remove(e)}
-                    >
-                      {t('settings.delete')}
-                    </button>
-                  </div>
+                  {confirming === e.id ? (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="text-sm text-liaotao-text-secondary">
+                        {t('settings.confirmDelete', { name: e.name })}
+                      </span>
+                      <button
+                        className="rounded border border-liaotao-border px-3 py-1 text-liaotao-error"
+                        onClick={() => remove(e)}
+                      >
+                        {t('settings.delete')}
+                      </button>
+                      <button
+                        className="rounded border border-liaotao-border px-3 py-1 text-liaotao-text-secondary"
+                        onClick={() => setConfirming(null)}
+                      >
+                        {t('settings.cancel')}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        className="rounded border border-liaotao-border px-3 py-1 text-liaotao-accent"
+                        onClick={() => setEditing(e)}
+                      >
+                        {t('settings.edit')}
+                      </button>
+                      <button
+                        className="rounded border border-liaotao-border px-3 py-1 text-liaotao-error"
+                        onClick={() => setConfirming(e.id)}
+                      >
+                        {t('settings.delete')}
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

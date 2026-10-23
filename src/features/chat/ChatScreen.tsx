@@ -15,7 +15,8 @@ interface ChatScreenProps {
 
 export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScreenProps) {
   const { t } = useTranslation()
-  const [engine, setEngine] = useState<EngineView | null>(null)
+  const [engines, setEngines] = useState<EngineView[]>([])
+  const [engineId, setEngineId] = useState('')
   const [models, setModels] = useState<string[]>([])
   const [model, setModel] = useState('')
   const [noEngine, setNoEngine] = useState(false)
@@ -38,26 +39,32 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
     endRef.current?.scrollIntoView({ block: 'end' })
   }, [messages.length, stream.text])
 
+  const engine = engines.find((e) => e.id === engineId) ?? null
+
+  // (Re)load engines when settings change; keep the chosen one if it still exists
   useEffect(() => {
-    setEngineError(null)
     listEngines()
-      .then(async (engines) => {
-        const e = engines[0]
-        if (!e) {
-          setEngine(null)
-          setModels([])
-          setModel('')
-          setNoEngine(true)
-          return
-        }
-        setNoEngine(false)
-        setEngine(e)
-        const found = await listModels({ id: e.id, base_url: e.base_url })
-        setModels(found)
-        setModel(found[0] ?? '')
+      .then((list) => {
+        setEngines(list)
+        setNoEngine(list.length === 0)
+        setEngineId((current) => (list.some((e) => e.id === current) ? current : list[0]?.id ?? ''))
       })
       .catch((err) => setEngineError(String(err)))
   }, [settingsVersion])
+
+  // Models of the chosen engine; keep the chosen model if this engine has it.
+  // The conversation is kept: the next message goes to the new engine and model.
+  useEffect(() => {
+    setEngineError(null)
+    setModels([])
+    if (!engine) return
+    listModels({ id: engine.id, base_url: engine.base_url })
+      .then((found) => {
+        setModels(found)
+        setModel((current) => (found.includes(current) ? current : found[0] ?? ''))
+      })
+      .catch((err) => setEngineError(String(err)))
+  }, [engine?.id, engine?.base_url, settingsVersion])
 
   const send = () => {
     if (!engine || !model || !prompt.trim() || stream.busy) return
@@ -71,7 +78,16 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
     <main className="flex h-full flex-col gap-4 p-6">
       <header className="flex items-center gap-3">
         <img src={logo} alt={t('app.name')} className="h-8 w-8" />
-        <span className="text-liaotao-text-secondary">{engine?.name}</span>
+        <select
+          className="rounded border bg-liaotao-bg-secondary px-2 py-1"
+          value={engineId}
+          onChange={(e) => setEngineId(e.target.value)}
+          aria-label={t('chat.engine')}
+        >
+          {engines.map((e) => (
+            <option key={e.id} value={e.id}>{e.name}</option>
+          ))}
+        </select>
         <select
           className="rounded border bg-liaotao-bg-secondary px-2 py-1"
           value={model}

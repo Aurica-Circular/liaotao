@@ -95,6 +95,11 @@ if [[ -n "$TSX" ]]; then
 fi
 [[ -z "$hits" ]] || fail "User-visible text must come from src/i18n/en.json via t('...'):
 $hits"
+# Browser dialogs never show in Tauri's macOS webview (confirm returns false).
+dialogs=$(source_files "src" "ts|tsx" | tr '\n' '\0' \
+  | xargs -0 grep -nE '\b(window\.)?(alert|confirm|prompt)\(' 2>/dev/null || true)
+[[ -z "$dialogs" ]] || fail "alert/confirm/prompt do not work in Tauri; confirm inside the page:
+$dialogs"
 pass
 
 # ---------------------------------------------------------------------------

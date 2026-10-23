@@ -28,6 +28,8 @@ These rules apply to every change, whatever the task. They override any habit or
 9. **Do not reformat, reorganise or "improve" code outside the scope of your task card.**
 10. **When in doubt, stop and ask.** Never improvise.
 11. **Do not push, and do not commit unless your task card says so.**
+12. **Never use `window.alert`, `window.confirm` or `window.prompt`.** Tauri's macOS webview
+    does not show them (`confirm` silently returns false). Ask for confirmation inside the page.
 
 ## Project facts
 
