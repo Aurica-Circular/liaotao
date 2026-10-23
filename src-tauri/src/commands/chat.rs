@@ -1,26 +1,44 @@
-// commands/chat.rs — Streaming chat, stop, and engine discovery
+// commands/chat.rs — Streaming chat and stop
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+use serde::Deserialize;
 use tauri::{ipc::Channel, State};
 use tokio::sync::Notify;
 
-use crate::config::AppConfig;
-use crate::engine::{self, ChatRequest, Engine, StreamEvent};
+use crate::engine::{self, ChatMessage, ChatRequest, StreamEvent};
+use crate::settings::SettingsStore;
 
 /// Stop signals of the generations in progress, by generation id.
 #[derive(Default)]
 pub struct Generations(Mutex<HashMap<String, Arc<Notify>>>);
 
+/// What the interface sends: the engine by id; its key never leaves the backend.
+#[derive(Debug, Deserialize)]
+pub struct ChatInput {
+    pub engine_id:   String,
+    pub model:       String,
+    pub messages:    Vec<ChatMessage>,
+    #[serde(default)]
+    pub temperature: Option<f32>,
+}
+
 /// Stream one answer to `on_event`. Returns when the generation has ended.
 #[tauri::command]
 pub async fn chat_stream(
     id: String,
-    request: ChatRequest,
+    input: ChatInput,
     on_event: Channel<StreamEvent>,
     generations: State<'_, Generations>,
+    store: State<'_, SettingsStore>,
 ) -> Result<(), String> {
+    let request = ChatRequest {
+        engine: store.engine(&input.engine_id)?,
+        model: input.model,
+        messages: input.messages,
+        temperature: input.temperature,
+    };
     let stop = Arc::new(Notify::new());
     generations.0.lock().map_err(|e| e.to_string())?.insert(id.clone(), stop.clone());
 
@@ -53,14 +71,4 @@ pub fn chat_stop(id: String, generations: State<'_, Generations>) -> Result<(), 
         stop.notify_one();
     }
     Ok(())
-}
-
-#[tauri::command]
-pub async fn engine_models(engine: Engine) -> Result<Vec<String>, String> {
-    engine::list_models(&engine).await
-}
-
-#[tauri::command]
-pub fn default_engine(cfg: State<'_, AppConfig>) -> Option<Engine> {
-    cfg.default_engine.clone()
 }

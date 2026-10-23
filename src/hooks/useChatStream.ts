@@ -1,7 +1,7 @@
 // useChatStream.ts — One streamed answer: text as it arrives, status, raw error, duration
 
 import { useCallback, useRef, useState } from 'react'
-import { ChatRequest, StreamEvent, stopChat, streamChat } from '../lib/engine'
+import { ChatInput, StreamEvent, stopChat, streamChat } from '../lib/engine'
 
 /** waiting: request sent, nothing back yet · thinking: reasoning, no answer text yet */
 export type StreamStatus =
@@ -14,7 +14,7 @@ export function useChatStream() {
   const [durationMs, setDurationMs] = useState<number | null>(null)
   const currentId = useRef<string | null>(null)
 
-  const send = useCallback(async (request: ChatRequest) => {
+  const send = useCallback(async (input: ChatInput) => {
     const id = crypto.randomUUID()
     currentId.current = id
     setText('')
@@ -46,7 +46,7 @@ export function useChatStream() {
     }
 
     try {
-      await streamChat(id, request, onEvent)
+      await streamChat(id, input, onEvent)
     } catch (err) {
       setError(String(err))
       setStatus('failed')

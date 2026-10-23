@@ -2,14 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChatMessage, Engine, getDefaultEngine, listModels } from '../../lib/engine'
+import { ChatMessage, EngineView, listEngines, listModels } from '../../lib/engine'
 import { useChatStream } from '../../hooks/useChatStream'
 import logo from '../../../Liaotao-logo.svg'
 import MessageBubble from './MessageBubble'
 
 export default function ChatScreen() {
   const { t } = useTranslation()
-  const [engine, setEngine] = useState<Engine | null>(null)
+  const [engine, setEngine] = useState<EngineView | null>(null)
   const [models, setModels] = useState<string[]>([])
   const [model, setModel] = useState('')
   const [engineError, setEngineError] = useState<string | null>(null)
@@ -32,11 +32,12 @@ export default function ChatScreen() {
   }, [messages.length, stream.text])
 
   useEffect(() => {
-    getDefaultEngine()
-      .then(async (e) => {
+    listEngines()
+      .then(async (engines) => {
+        const e = engines[0]
         if (!e) return
         setEngine(e)
-        const found = await listModels(e)
+        const found = await listModels({ id: e.id, base_url: e.base_url })
         setModels(found)
         setModel(found[0] ?? '')
       })
@@ -48,7 +49,7 @@ export default function ChatScreen() {
     const next: ChatMessage[] = [...messages, { role: 'user', content: prompt }]
     setMessages(next)
     setPrompt('')
-    void stream.send({ engine, model, messages: next })
+    void stream.send({ engine_id: engine.id, model, messages: next })
   }
 
   return (

@@ -46,6 +46,9 @@ anyhow        = "1"
 # Async traits
 async-trait   = "0.1"
 
+# API keys in the OS credential store (user option; default is the settings file)
+keyring       = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust", "vendored"] }
+
 # Paths and filesystem
 dirs          = "5"
 shellexpand   = "3"

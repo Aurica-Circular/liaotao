@@ -16,9 +16,23 @@ pub struct RuntimePaths {
     pub temp_dir:    PathBuf,
     pub logs_dir:    PathBuf,
     pub reports_dir: PathBuf,
+    /// User settings (engines, keys in file mode). Lives in the OS config dir
+    /// (macOS: ~/Library/Application Support/liaotao), never in a synced folder.
+    pub settings_file: PathBuf,
 }
 
 // ---------------------------------------------------------------------------
+
+/// The application's own settings directory, created if missing. It is not
+/// subject to allowed_roots, which guard user-chosen output locations.
+fn settings_dir() -> Result<PathBuf, AppError> {
+    let dir = dirs::config_dir()
+        .ok_or_else(|| AppError::Path("no configuration directory on this system".into()))?
+        .join("liaotao");
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| AppError::Path(format!("cannot create {}: {e}", dir.display())))?;
+    Ok(dir)
+}
 
 /// Build, validate, and create all required runtime directories.
 pub fn build(cfg: &AppConfig) -> Result<RuntimePaths, AppError> {
@@ -32,7 +46,9 @@ pub fn build(cfg: &AppConfig) -> Result<RuntimePaths, AppError> {
     create_dir_safe(&logs_dir,    &pm.allowed_roots)?;
     create_dir_safe(&reports_dir, &pm.allowed_roots)?;
 
-    Ok(RuntimePaths { temp_dir, logs_dir, reports_dir })
+    let settings_file = settings_dir()?.join("settings.json");
+
+    Ok(RuntimePaths { temp_dir, logs_dir, reports_dir, settings_file })
 }
 
 /// Resolve a candidate output path, applying the collision strategy.
