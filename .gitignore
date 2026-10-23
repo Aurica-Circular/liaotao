@@ -35,7 +35,6 @@ id_ed25519
 
 # Rust
 target/
-Cargo.lock   # remove this line if it's a binary crate (keep lock for binaries)
 
 # Node
 node_modules/
