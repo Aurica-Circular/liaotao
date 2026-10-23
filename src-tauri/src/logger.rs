@@ -38,7 +38,7 @@ pub fn init(cfg: &LoggerSection) -> Result<WorkerGuard, AppError> {
 
 /// Create a span for a single job, attaching job_id and correlation_id.
 /// Use inside an async task or conversion function:
-/// ```rust
+/// ```ignore
 /// let _span = logger::job_span("encode-42", "corr-xyz").entered();
 /// tracing::info!("starting encode");
 /// ```

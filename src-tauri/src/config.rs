@@ -186,20 +186,37 @@ include_failed  = true
 
     #[test]
     fn validate_rejects_invalid_mode() {
-        let mut cfg: AppConfig = toml::from_str(
+        let cfg: AppConfig = toml::from_str(
             r#"[app]
-name="T" version="0.1.0" mode="bad" language="fr"
+name = "T"
+version = "0.1.0"
+mode = "bad"
+language = "fr"
 [config]
-schema_version=1 enable_layered_merge=true strict_mode=false
+schema_version = 1
+enable_layered_merge = true
+strict_mode = false
 [path_manager]
-allowed_roots=["/tmp"] temp_dir="/tmp/.tmp" logs_dir="/tmp/logs"
-reports_dir="/tmp/reports" collision_strategy="increment"
-normalize_unicode=false trim_whitespace=true
+allowed_roots = ["/tmp"]
+temp_dir = "/tmp/.tmp"
+logs_dir = "/tmp/logs"
+reports_dir = "/tmp/reports"
+collision_strategy = "increment"
+normalize_unicode = false
+trim_whitespace = true
 [logger]
-level="info" console_pretty=true file_json=true rotation_enabled=true
-max_file_mb=20 max_files=5 include_context_ids=true
+level = "info"
+console_pretty = true
+file_json = true
+rotation_enabled = true
+max_file_mb = 20
+max_files = 5
+include_context_ids = true
 [reporting]
-enabled=true json_report=true csv_report=true include_failed=true"#,
+enabled = true
+json_report = true
+csv_report = true
+include_failed = true"#,
         )
         .unwrap();
         assert!(validate(&cfg).is_err());
