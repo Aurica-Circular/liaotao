@@ -1,9 +1,13 @@
 // config.rs — Configuration module
 // Loads and merges TOML layers: default → user → project → runtime
 
-use serde::Deserialize;
-use std::path::{Path, PathBuf};
+// The schema mirrors config/default.toml; fields get read as features land.
+#![allow(dead_code)]
 
+use serde::Deserialize;
+use std::path::PathBuf;
+
+use crate::engine::Engine;
 use crate::errors::AppError;
 
 // ---------------------------------------------------------------------------
@@ -16,6 +20,9 @@ pub struct AppConfig {
     pub path_manager: PathManagerSection,
     pub logger:       LoggerSection,
     pub reporting:    ReportingSection,
+    /// Engine offered on first launch, before the user configures any.
+    #[serde(default)]
+    pub default_engine: Option<Engine>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

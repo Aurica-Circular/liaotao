@@ -74,7 +74,8 @@ if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
 $(echo "$out" | tail -25)"
 fi
 if [[ $LIVE -eq 1 ]]; then
-  out=$(cd src-tauri && cargo test --quiet -- --ignored 2>&1) || fail "live tests failed:
+  # --lib: --ignored would otherwise also run doc examples marked `ignore`
+  out=$(cd src-tauri && cargo test --quiet --lib -- --ignored 2>&1) || fail "live tests failed:
 $(echo "$out" | grep -E 'FAILED|panicked|^error' | head -25)"
 fi
 pass

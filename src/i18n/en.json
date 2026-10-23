@@ -1,5 +1,15 @@
 {
   "app": {
     "name": "Liaotao"
+  },
+  "chat": {
+    "model": "Model",
+    "placeholder": "Ask something… (Enter to send, Shift+Enter for a new line)",
+    "send": "Send",
+    "stop": "Stop",
+    "waiting": "Waiting for the engine…",
+    "engineError": "Engine error: {{message}}",
+    "doneIn": "Answered in {{seconds}} s",
+    "stoppedAfter": "Stopped after {{seconds}} s"
   }
 }

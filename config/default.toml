@@ -58,6 +58,13 @@ max_files        = 5
 include_context_ids = true
 
 # ---------------------------------------------------------------------------
+# Engine offered on first launch. Any OpenAI-compatible API works
+# (Ollama, AiTao on port 8200, ...). base_url ends before /chat/completions.
+[default_engine]
+name     = "Ollama"
+base_url = "http://localhost:11434/v1"
+
+# ---------------------------------------------------------------------------
 [reporting]
 enabled           = false
 json_report       = false

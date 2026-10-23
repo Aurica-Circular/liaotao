@@ -46,4 +46,5 @@ impl From<AppError> for String {
     }
 }
 
+#[allow(dead_code)]
 pub type AppResult<T> = Result<T, AppError>;

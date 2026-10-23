@@ -1,6 +1,9 @@
 // paths.rs — Path manager module
 // Centralizes ALL path logic. No other module should build paths directly.
 
+// temp/reports dirs and resolve_output serve upcoming export features.
+#![allow(dead_code)]
+
 use std::path::{Path, PathBuf};
 
 use crate::config::AppConfig;

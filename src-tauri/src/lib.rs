@@ -1,10 +1,13 @@
 // lib.rs — Application bootstrap for Liaotao AI Chat
 
+mod commands;
 mod config;
+pub mod engine;
 mod errors;
 mod logger;
 mod paths;
 
+use commands::chat::{self, Generations};
 use errors::AppError;
 
 pub fn run() -> Result<(), AppError> {
@@ -29,6 +32,13 @@ pub fn run() -> Result<(), AppError> {
     tauri::Builder::default()
         .manage(cfg)
         .manage(paths)
+        .manage(Generations::default())
+        .invoke_handler(tauri::generate_handler![
+            chat::chat_stream,
+            chat::chat_stop,
+            chat::engine_models,
+            chat::default_engine,
+        ])
         .run(tauri::generate_context!())
         .map_err(|e| AppError::Tauri(e.to_string()))
 }

@@ -1,7 +1,9 @@
 // logger.rs — Structured logging module
 // Dual output: human-readable console + JSON log files with rotation.
 
-use std::path::Path;
+// Helpers such as job_span are kept for upcoming background jobs.
+#![allow(dead_code)]
+
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::config::LoggerSection;
