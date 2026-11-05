@@ -7,8 +7,8 @@
 |-----------|--------|-----------|-----------------------------------------|
 | name      | string | required  | Application name                        |
 | version   | string | "0.1.0"   | Semantic version                        |
-| mode      | string | "debug"   | `debug` keeps originals; `normal` trashes them |
-| language  | string | "fr"      | UI language                             |
+| mode      | string | "debug"   | `debug` or `normal`; `normal` requires `allowed_roots` |
+| language  | string | "en"      | UI language                             |
 
 ### `[config]`
 | Key                  | Type    | Default | Description                              |
@@ -46,3 +46,12 @@
 | json_report    | bool | true    | Output JSON report                   |
 | csv_report     | bool | true    | Output CSV report                    |
 | include_failed | bool | true    | Include failed jobs in reports       |
+
+### `[default_engine]` (optional)
+Engine offered on first launch, before the user saves any engine in Settings.
+After that, engines live in the user's `settings.json`, not here.
+
+| Key      | Type   | Default                       | Description                                   |
+|----------|--------|-------------------------------|-----------------------------------------------|
+| name     | string | "Ollama"                      | Name shown in the interface                   |
+| base_url | string | "http://localhost:11434/v1"   | OpenAI-compatible address, before `/chat/completions` |
