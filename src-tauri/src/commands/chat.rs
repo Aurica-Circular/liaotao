@@ -50,23 +50,24 @@ pub async fn chat_stream(
         .sum();
     tracing::info!(
         id = %id, engine = %engine_name, model = %model,
-        temperature = ?request.temperature, messages = request.messages.len(), system_chars,
+        temperature = request.temperature, messages = request.messages.len(), system_chars,
         "generation started"
     );
 
     engine::stream_chat(&request, &stop, |event| {
         match &event {
+            // Options are recorded only when present, as plain numbers.
             StreamEvent::Finished { stopped, metrics: m, .. } => tracing::info!(
                 id = %id, engine = %engine_name, model = %model, stopped,
                 duration_ms = m.duration_ms,
-                first_token_ms = ?m.first_token_ms,
-                thinking_ms = ?m.thinking_ms,
-                writing_ms = ?m.writing_ms,
+                first_token_ms = m.first_token_ms,
+                thinking_ms = m.thinking_ms,
+                writing_ms = m.writing_ms,
                 answer_chars = m.answer_chars,
                 thinking_chars = m.thinking_chars,
-                prompt_tokens = ?m.prompt_tokens,
-                completion_tokens = ?m.completion_tokens,
-                speed = ?m.speed,
+                prompt_tokens = m.prompt_tokens,
+                completion_tokens = m.completion_tokens,
+                speed = m.speed,
                 speed_unit = m.speed_unit,
                 "generation finished"
             ),
