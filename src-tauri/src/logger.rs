@@ -4,6 +4,8 @@
 // Helpers such as job_span are kept for upcoming background jobs.
 #![allow(dead_code)]
 
+use std::path::Path;
+
 use tracing_appender::non_blocking::WorkerGuard;
 
 use crate::config::LoggerSection;
@@ -11,7 +13,8 @@ use crate::errors::AppError;
 
 /// Initialize the global tracing subscriber.
 /// Returns the WorkerGuard — caller must keep it alive for the app lifetime.
-pub fn init(cfg: &LoggerSection) -> Result<WorkerGuard, AppError> {
+/// Files go to `logs_dir` (path_manager.logs_dir), whatever the working directory.
+pub fn init(cfg: &LoggerSection, logs_dir: &Path) -> Result<WorkerGuard, AppError> {
     let level_filter = cfg.level
         .parse::<tracing::Level>()
         .map_err(|_| AppError::Logger(format!("invalid log level: {}", cfg.level)))?;
@@ -21,7 +24,7 @@ pub fn init(cfg: &LoggerSection) -> Result<WorkerGuard, AppError> {
         .max_log_files(cfg.max_files)
         .filename_prefix("app")
         .filename_suffix("log")
-        .build("logs")
+        .build(logs_dir)
         .map_err(|e| AppError::Logger(e.to_string()))?;
 
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);

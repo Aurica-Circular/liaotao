@@ -144,10 +144,10 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
       {stream.error && (
         <p className="text-liaotao-error">{t('chat.engineError', { message: stream.error })}</p>
       )}
-      {stream.durationMs !== null && (
+      {stream.metrics !== null && (
         <p className="text-sm text-liaotao-text-muted">
           {t(stream.status === 'stopped' ? 'chat.stoppedAfter' : 'chat.doneIn', {
-            seconds: (stream.durationMs / 1000).toFixed(1),
+            seconds: (stream.metrics.durationMs / 1000).toFixed(1),
           })}
         </p>
       )}

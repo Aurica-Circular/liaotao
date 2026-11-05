@@ -17,11 +17,11 @@ pub fn run() -> Result<(), AppError> {
     // 1. Load merged config (default → user → project → runtime)
     let cfg = config::load()?;
 
-    // 2. Initialize logger (console + JSON file)
-    let _guard = logger::init(&cfg.logger)?;
-
-    // 3. Build and validate runtime paths
+    // 2. Build and validate runtime paths (the logger needs logs_dir)
     let paths = paths::build(&cfg)?;
+
+    // 3. Initialize logger (JSON file in logs_dir)
+    let _guard = logger::init(&cfg.logger, &paths.logs_dir)?;
 
     tracing::info!(
         app    = cfg.app.name.as_str(),

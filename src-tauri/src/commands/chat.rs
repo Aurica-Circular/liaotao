@@ -43,12 +43,32 @@ pub async fn chat_stream(
     generations.0.lock().map_err(|e| e.to_string())?.insert(id.clone(), stop.clone());
 
     let (engine_name, model) = (request.engine.name.clone(), request.model.clone());
-    tracing::info!(id = %id, engine = %engine_name, model = %model, "generation started");
+    // Settings are logged by size only: prompts may be private.
+    let system_chars: usize = request.messages.iter()
+        .filter(|m| m.role == "system")
+        .map(|m| m.content.chars().count())
+        .sum();
+    tracing::info!(
+        id = %id, engine = %engine_name, model = %model,
+        temperature = ?request.temperature, messages = request.messages.len(), system_chars,
+        "generation started"
+    );
 
     engine::stream_chat(&request, &stop, |event| {
         match &event {
-            StreamEvent::Finished { duration_ms, stopped, .. } => tracing::info!(
-                id = %id, engine = %engine_name, model = %model, duration_ms, stopped, "generation finished"
+            StreamEvent::Finished { stopped, metrics: m, .. } => tracing::info!(
+                id = %id, engine = %engine_name, model = %model, stopped,
+                duration_ms = m.duration_ms,
+                first_token_ms = ?m.first_token_ms,
+                thinking_ms = ?m.thinking_ms,
+                writing_ms = ?m.writing_ms,
+                answer_chars = m.answer_chars,
+                thinking_chars = m.thinking_chars,
+                prompt_tokens = ?m.prompt_tokens,
+                completion_tokens = ?m.completion_tokens,
+                speed = ?m.speed,
+                speed_unit = m.speed_unit,
+                "generation finished"
             ),
             StreamEvent::Failed { message } => tracing::warn!(
                 id = %id, engine = %engine_name, model = %model, error = %message, "generation failed"

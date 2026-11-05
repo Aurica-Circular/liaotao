@@ -43,12 +43,31 @@ export interface ChatInput {
   temperature?: number
 }
 
+/** Measures of one generation; the same numbers are written to the log. */
+export interface GenerationMetrics {
+  /** Request sent → end. */
+  durationMs: number
+  /** Request sent → first piece of thought or answer (model loading shows here). */
+  firstTokenMs: number | null
+  /** Thinking models only: first thought → first answer piece. */
+  thinkingMs: number | null
+  /** First answer piece → end. */
+  writingMs: number | null
+  answerChars: number
+  thinkingChars: number
+  promptTokens: number | null
+  completionTokens: number | null
+  /** Generation speed from the first piece to the end, in `speedUnit`. */
+  speed: number | null
+  speedUnit: 'tokens/s' | 'chars/s'
+}
+
 /** Exactly one `finished` or `failed` ends every generation. */
 export type StreamEvent =
   | { event: 'started' }
   | { event: 'thinking'; text: string }
   | { event: 'delta'; text: string }
-  | { event: 'finished'; durationMs: number; stopped: boolean; lastChunk: unknown }
+  | { event: 'finished'; stopped: boolean; metrics: GenerationMetrics; lastChunk: unknown }
   | { event: 'failed'; message: string }
 
 export function listEngines(): Promise<EngineView[]> {

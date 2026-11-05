@@ -1,7 +1,7 @@
-// useChatStream.ts — One streamed answer: text as it arrives, status, raw error, duration
+// useChatStream.ts — One streamed answer: text as it arrives, status, raw error, metrics
 
 import { useCallback, useRef, useState } from 'react'
-import { ChatInput, StreamEvent, stopChat, streamChat } from '../lib/engine'
+import { ChatInput, GenerationMetrics, StreamEvent, stopChat, streamChat } from '../lib/engine'
 
 /** waiting: request sent, nothing back yet · thinking: reasoning, no answer text yet */
 export type StreamStatus =
@@ -11,7 +11,7 @@ export function useChatStream() {
   const [text, setText] = useState('')
   const [status, setStatus] = useState<StreamStatus>('idle')
   const [error, setError] = useState<string | null>(null)
-  const [durationMs, setDurationMs] = useState<number | null>(null)
+  const [metrics, setMetrics] = useState<GenerationMetrics | null>(null)
   const currentId = useRef<string | null>(null)
 
   const send = useCallback(async (input: ChatInput) => {
@@ -19,7 +19,7 @@ export function useChatStream() {
     currentId.current = id
     setText('')
     setError(null)
-    setDurationMs(null)
+    setMetrics(null)
     setStatus('waiting')
 
     const onEvent = (e: StreamEvent) => {
@@ -35,7 +35,7 @@ export function useChatStream() {
           setText((t) => t + e.text)
           break
         case 'finished':
-          setDurationMs(e.durationMs)
+          setMetrics(e.metrics)
           setStatus(e.stopped ? 'stopped' : 'done')
           break
         case 'failed':
@@ -58,5 +58,5 @@ export function useChatStream() {
   }, [])
 
   const busy = status === 'waiting' || status === 'thinking' || status === 'streaming'
-  return { text, status, error, durationMs, busy, send, stop }
+  return { text, status, error, metrics, busy, send, stop }
 }

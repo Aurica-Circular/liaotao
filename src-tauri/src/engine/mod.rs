@@ -1,9 +1,11 @@
 // engine/mod.rs — Talks to any OpenAI-compatible engine (Ollama, AiTao, ...)
 
 mod client;
+mod metrics;
 mod sse;
 
 pub use client::{list_models, stream_chat};
+pub use metrics::GenerationMetrics;
 
 use serde::{Deserialize, Serialize};
 
@@ -44,7 +46,7 @@ pub enum StreamEvent {
     Delta { text: String },
     /// The answer is complete, or was stopped by the user.
     /// `last_chunk` is the engine's final raw chunk (AiTao puts sources there).
-    Finished { duration_ms: u64, stopped: bool, last_chunk: Option<serde_json::Value> },
+    Finished { stopped: bool, metrics: GenerationMetrics, last_chunk: Option<serde_json::Value> },
     /// The engine failed; `message` is the raw cause, never rephrased.
     Failed { message: String },
 }

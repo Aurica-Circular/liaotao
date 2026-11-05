@@ -1,10 +1,11 @@
 // engine/client.rs — HTTP calls to an OpenAI-compatible engine, with streaming
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use serde_json::{json, Value};
 use tokio::sync::Notify;
 
+use super::metrics::Meter;
 use super::sse::{SseBuffer, SseItem};
 use super::{ChatRequest, Engine, StreamEvent};
 
@@ -68,15 +69,21 @@ pub async fn list_models(engine: &Engine) -> Result<Vec<String>, String> {
 /// `Finished` or `Failed`. A notification on `stop` ends the generation at once,
 /// even while the engine is silent.
 pub async fn stream_chat(req: &ChatRequest, stop: &Notify, mut emit: impl FnMut(StreamEvent)) {
-    let started = Instant::now();
-    let finished = |stopped: bool, last_chunk: Option<Value>| StreamEvent::Finished {
-        duration_ms: started.elapsed().as_millis() as u64,
+    let mut meter = Meter::start();
+    let finished = |meter: &Meter, stopped: bool, last_chunk: Option<Value>| StreamEvent::Finished {
         stopped,
+        metrics: meter.finish(),
         last_chunk,
     };
     let failed = |message: String| StreamEvent::Failed { message };
 
-    let mut body = json!({ "model": req.model, "messages": req.messages, "stream": true });
+    // include_usage: engines that support it report real token counts in the last chunk.
+    let mut body = json!({
+        "model": req.model,
+        "messages": req.messages,
+        "stream": true,
+        "stream_options": { "include_usage": true },
+    });
     if let Some(t) = req.temperature {
         body["temperature"] = json!(t);
     }
@@ -92,7 +99,7 @@ pub async fn stream_chat(req: &ChatRequest, stop: &Notify, mut emit: impl FnMut(
             Ok(r) => return emit(failed(http_failure(r).await)),
             Err(e) => return emit(failed(raw_error(e))),
         },
-        _ = stop.notified() => return emit(finished(true, None)),
+        _ = stop.notified() => return emit(finished(&meter, true, None)),
     };
     emit(StreamEvent::Started);
 
@@ -101,16 +108,16 @@ pub async fn stream_chat(req: &ChatRequest, stop: &Notify, mut emit: impl FnMut(
     loop {
         let chunk = tokio::select! {
             c = resp.chunk() => c,
-            _ = stop.notified() => return emit(finished(true, last_chunk)),
+            _ = stop.notified() => return emit(finished(&meter, true, last_chunk)),
         };
         let bytes = match chunk {
             Ok(Some(bytes)) => bytes,
-            Ok(None) => return emit(finished(false, last_chunk)), // closed without [DONE]
+            Ok(None) => return emit(finished(&meter, false, last_chunk)), // closed without [DONE]
             Err(e) => return emit(failed(raw_error(e))),
         };
         for item in sse.push(&bytes) {
             let data = match item {
-                SseItem::Done => return emit(finished(false, last_chunk)),
+                SseItem::Done => return emit(finished(&meter, false, last_chunk)),
                 SseItem::Data(data) => data,
             };
             let value: Value = match serde_json::from_str(&data) {
@@ -124,11 +131,14 @@ pub async fn stream_chat(req: &ChatRequest, stop: &Notify, mut emit: impl FnMut(
             // Ollama names it "reasoning", other OpenAI-compatible engines "reasoning_content".
             let thinking = delta["reasoning"].as_str().or(delta["reasoning_content"].as_str());
             if let Some(text) = thinking.filter(|t| !t.is_empty()) {
+                meter.thinking(text);
                 emit(StreamEvent::Thinking { text: text.to_string() });
             }
             if let Some(text) = delta["content"].as_str().filter(|t| !t.is_empty()) {
+                meter.answer(text);
                 emit(StreamEvent::Delta { text: text.to_string() });
             }
+            meter.usage(&value);
             last_chunk = Some(value);
         }
     }
@@ -164,7 +174,14 @@ mod live_tests {
         let deltas = events.iter().filter(|e| matches!(e, StreamEvent::Delta { .. })).count();
         assert!(matches!(events.first(), Some(StreamEvent::Started)), "{events:?}");
         assert!(deltas > 3, "expected a stream, got {deltas} pieces");
-        assert!(matches!(events.last(), Some(StreamEvent::Finished { stopped: false, .. })), "{events:?}");
+        match events.last() {
+            Some(StreamEvent::Finished { stopped: false, metrics, .. }) => {
+                println!("metrics: {metrics:?}");
+                assert!(metrics.first_token_ms.is_some(), "{metrics:?}");
+                assert!(metrics.answer_chars > 0 && metrics.speed.is_some(), "{metrics:?}");
+            }
+            other => panic!("expected Finished, got {other:?}"),
+        }
     }
 
     #[tokio::test]
