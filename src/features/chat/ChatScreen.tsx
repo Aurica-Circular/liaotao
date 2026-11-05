@@ -2,11 +2,16 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Settings } from 'lucide-react'
+import { Settings, SlidersHorizontal } from 'lucide-react'
 import { ChatMessage, EngineView, listEngines, listModels } from '../../lib/engine'
 import { useChatStream } from '../../hooks/useChatStream'
 import logo from '../../../Liaotao-logo.svg'
 import MessageBubble from './MessageBubble'
+import AnswerMeta, { AnswerInfo } from './AnswerMeta'
+import ConversationSettings from './ConversationSettings'
+
+/** A message of the conversation; an answer keeps who wrote it and how it went. */
+type Turn = ChatMessage & { meta?: AnswerInfo }
 
 interface ChatScreenProps {
   onOpenSettings: () => void
@@ -22,22 +27,30 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
   const [noEngine, setNoEngine] = useState(false)
   const [engineError, setEngineError] = useState<string | null>(null)
   const [prompt, setPrompt] = useState('')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [turns, setTurns] = useState<Turn[]>([])
+  const [showSettings, setShowSettings] = useState(false)
+  const [systemPrompt, setSystemPrompt] = useState('')
+  // null = the engine's own default temperature
+  const [temperature, setTemperature] = useState<number | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const stream = useChatStream()
+  // Engine and model of the answer being generated, as they were at send time
+  const sentWith = useRef({ engineName: '', model: '' })
 
   // Keep each finished answer in the conversation, once. Layout effect: the
   // answer moves into the list before paint, so its bubble never blinks.
   useLayoutEffect(() => {
-    if ((stream.status === 'done' || stream.status === 'stopped') && stream.text !== '') {
-      setMessages((m) => [...m, { role: 'assistant', content: stream.text }])
+    const metrics = stream.metrics
+    if ((stream.status === 'done' || stream.status === 'stopped') && stream.text !== '' && metrics !== null) {
+      const meta: AnswerInfo = { ...sentWith.current, metrics, stopped: stream.status === 'stopped' }
+      setTurns((m) => [...m, { role: 'assistant', content: stream.text, meta }])
     }
   }, [stream.status])
 
   // Follow the conversation as messages are added and the answer grows
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages.length, stream.text])
+  }, [turns.length, stream.text])
 
   const engine = engines.find((e) => e.id === engineId) ?? null
 
@@ -70,10 +83,21 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
 
   const send = () => {
     if (!engine || !model || !prompt.trim() || stream.busy) return
-    const next: ChatMessage[] = [...messages, { role: 'user', content: prompt }]
-    setMessages(next)
+    const next: Turn[] = [...turns, { role: 'user', content: prompt }]
+    setTurns(next)
     setPrompt('')
-    void stream.send({ engine_id: engine.id, model, messages: next })
+    sentWith.current = { engineName: engine.name, model }
+    // The system prompt comes first; the per-answer measures are not sent back
+    const messages: ChatMessage[] = [
+      ...(systemPrompt.trim() !== '' ? [{ role: 'system' as const, content: systemPrompt }] : []),
+      ...next.map(({ role, content }) => ({ role, content })),
+    ]
+    void stream.send({
+      engine_id: engine.id,
+      model,
+      messages,
+      ...(temperature !== null ? { temperature } : {}),
+    })
   }
 
   return (
@@ -102,12 +126,29 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
         </select>
         <button
           className="rounded p-1 text-liaotao-text-secondary hover:text-liaotao-accent"
+          onClick={() => setShowSettings((shown) => !shown)}
+          aria-label={t('chat.settings')}
+          aria-pressed={showSettings}
+        >
+          <SlidersHorizontal className="h-5 w-5" />
+        </button>
+        <button
+          className="rounded p-1 text-liaotao-text-secondary hover:text-liaotao-accent"
           onClick={onOpenSettings}
           aria-label={t('settings.open')}
         >
           <Settings className="h-5 w-5" />
         </button>
       </header>
+
+      {showSettings && (
+        <ConversationSettings
+          systemPrompt={systemPrompt}
+          onSystemPrompt={setSystemPrompt}
+          temperature={temperature}
+          onTemperature={setTemperature}
+        />
+      )}
 
       {engineError && (
         <p className="text-liaotao-error">{t('chat.engineError', { message: engineError })}</p>
@@ -117,11 +158,12 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
         {noEngine && (
           <p className="text-liaotao-text-secondary">{t('chat.noEngine')}</p>
         )}
-        {messages.map((m, i) => (
+        {turns.map((m, i) => (
           <MessageBubble
             key={i}
             role={m.role === 'user' ? 'user' : 'assistant'}
             content={m.content}
+            footer={m.meta ? <AnswerMeta meta={m.meta} /> : undefined}
           />
         ))}
         {stream.busy && (
@@ -143,13 +185,6 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
 
       {stream.error && (
         <p className="text-liaotao-error">{t('chat.engineError', { message: stream.error })}</p>
-      )}
-      {stream.metrics !== null && (
-        <p className="text-sm text-liaotao-text-muted">
-          {t(stream.status === 'stopped' ? 'chat.stoppedAfter' : 'chat.doneIn', {
-            seconds: (stream.metrics.durationMs / 1000).toFixed(1),
-          })}
-        </p>
       )}
 
       <footer className="flex gap-3">

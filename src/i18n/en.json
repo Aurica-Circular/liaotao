@@ -11,9 +11,17 @@
     "waiting": "Waiting for the engine… (loading a model can take a while)",
     "thinking": "The model is thinking…",
     "engineError": "Engine error: {{message}}",
-    "doneIn": "Answered in {{seconds}} s",
-    "stoppedAfter": "Stopped after {{seconds}} s",
-    "noEngine": "No engine yet. Open the settings to add one."
+    "noEngine": "No engine yet. Open the settings to add one.",
+    "settings": "Conversation settings",
+    "systemPrompt": "System prompt",
+    "systemPromptHint": "Instructions sent before the conversation, e.g. \"Answer in French.\"",
+    "temperature": "Temperature",
+    "temperatureDefault": "Engine default temperature",
+    "meta": "{{engine}} · {{model}} · {{seconds}} s",
+    "metaFirstToken": "first word after {{seconds}} s",
+    "metaSpeed": "{{speed}} {{unit}}",
+    "metaStopped": "stopped",
+    "metaTokens": "{{count}} tokens"
   },
   "settings": {
     "title": "Settings",
