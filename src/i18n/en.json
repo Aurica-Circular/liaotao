@@ -20,6 +20,7 @@
     "open": "Open settings",
     "close": "Close settings",
     "engines": "Engines",
+    "back": "Engines",
     "add": "Add engine",
     "edit": "Edit",
     "delete": "Delete",

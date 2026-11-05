@@ -54,6 +54,8 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
 
   // Models of the chosen engine; keep the chosen model if this engine has it.
   // The conversation is kept: the next message goes to the new engine and model.
+  // Runs after each engine list reload (`engines`), never on a stale list: a
+  // just-deleted engine must not be queried.
   useEffect(() => {
     setEngineError(null)
     setModels([])
@@ -64,7 +66,7 @@ export default function ChatScreen({ onOpenSettings, settingsVersion }: ChatScre
         setModel((current) => (found.includes(current) ? current : found[0] ?? ''))
       })
       .catch((err) => setEngineError(String(err)))
-  }, [engine?.id, engine?.base_url, settingsVersion])
+  }, [engine?.id, engine?.base_url, engines])
 
   const send = () => {
     if (!engine || !model || !prompt.trim() || stream.busy) return

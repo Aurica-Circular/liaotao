@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ArrowLeft } from 'lucide-react'
 import { EngineInput, EngineView, listModels, saveEngine } from '../../lib/engine'
 
 interface EngineFormProps {
@@ -53,6 +54,15 @@ export default function EngineForm({ engine, onDone }: EngineFormProps) {
         if (canSave) save()
       }}
     >
+      <button
+        type="button"
+        className="flex items-center gap-1 self-start text-liaotao-text-secondary hover:text-liaotao-accent"
+        onClick={onDone}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {t('settings.back')}
+      </button>
+
       <label className="flex flex-col gap-1 text-liaotao-text-secondary">
         {t('settings.name')}
         <input
